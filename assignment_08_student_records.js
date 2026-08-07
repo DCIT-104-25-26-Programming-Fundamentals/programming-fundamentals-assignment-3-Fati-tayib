@@ -3,85 +3,179 @@
 // =============================================================================
 //
 // TASK: Student Record Management System
-//
-// Build a console-based program that stores and manages student information.
-// Each student is represented as a JavaScript object containing:
-//
-//   - name   : the student's full name  (string)
-//   - id     : a unique student ID number (number, e.g. 20240001)
-//   - scores : an array of scores from multiple assessments (e.g. [75, 88, 90])
-//
-// Example object:
-//   { name: "Alice Mensah", id: 20240001, scores: [78, 85, 90] }
-//
-// -----------------------------------------------------------------------------
-// HOW TO RUN THIS PROGRAM
-// -----------------------------------------------------------------------------
-// 1. Install the input library (only once):  npm install readline-sync
-// 2. Run the program:                        node assignment_08_student_records.js
-//
-// -----------------------------------------------------------------------------
-// FEATURES YOUR PROGRAM MUST SUPPORT
-// -----------------------------------------------------------------------------
-//
-//   1. Add a Student
-//      - Ask the user to enter the student's name and ID.
-//      - Ask how many scores to enter, then collect each score one by one.
-//      - Save the student object and confirm it was added.
-//
-//   2. Display All Students
-//      - Print a formatted table showing every student's:
-//          Name, ID, individual scores, and their average score.
-//      - If no students have been added yet, print a message saying so.
-//
-//   3. Calculate Average Score for a Specific Student
-//      - Ask the user to enter a student ID.
-//      - Find the student and print their average score.
-//      - If the ID is not found, print an error message.
-//
-//   4. Quit
-//
-// -----------------------------------------------------------------------------
-// HOW THE MENU SHOULD LOOK
-// -----------------------------------------------------------------------------
-//
-//   ================================
-//      STUDENT RECORD SYSTEM MENU
-//   ================================
-//   1. Add student
-//   2. Display all students
-//   3. Calculate average score
-//   4. Quit
-//   Enter your choice (1-4):
-//
-// -----------------------------------------------------------------------------
-// EXPECTED INTERACTION EXAMPLE
-// -----------------------------------------------------------------------------
-//
-//   Enter your choice (1-4): 1
-//   Student name: Alice Mensah
-//   Student ID: 20240001
-//   How many scores? 3
-//   Enter score 1: 78
-//   Enter score 2: 85
-//   Enter score 3: 90
-//   Student "Alice Mensah" added successfully.
-//
-//   Enter your choice (1-4): 3
-//   Enter student ID: 20240001
-//   Alice Mensah's average score: 84.33
-//
-// -----------------------------------------------------------------------------
-// REQUIREMENTS
-// -----------------------------------------------------------------------------
-// - Store all student records in an array of objects.
-// - Average scores must be displayed to 2 decimal places (use .toFixed(2)).
-// - Each feature MUST be in its own function (see scaffold below).
-// - Handle invalid menu choices and missing student IDs gracefully.
-//
-
-// =============================================================================
-// YOUR CODE BELOW — remove the // symbols from the scaffold and fill it in
 // =============================================================================
 
+const readlineSync = require('readline-sync');
 
+// Array to store all student records
+let students = [];
+
+// -----------------------------------------------------------------------------
+// UTILITY: Calculate the average of an array of scores
+// -----------------------------------------------------------------------------
+/**
+ * Returns the average of a scores array, rounded to 2 decimal places.
+ * @param {number[]} scores
+ * @returns {string} Average formatted to 2 decimal places.
+ */
+function calculateAverage(scores) {
+  let total = 0;
+  for (let i = 0; i < scores.length; i++) {
+    total += scores[i];
+  }
+  return (total / scores.length).toFixed(2);
+}
+
+// -----------------------------------------------------------------------------
+// UTILITY: Find a student by ID
+// -----------------------------------------------------------------------------
+/**
+ * Searches the students array for a student with the given ID.
+ * @param {number} id
+ * @returns {object|null} The student object, or null if not found.
+ */
+function findStudentById(id) {
+  for (let i = 0; i < students.length; i++) {
+    if (students[i].id === id) {
+      return students[i];
+    }
+  }
+  return null;
+}
+
+// -----------------------------------------------------------------------------
+// Display the menu
+// -----------------------------------------------------------------------------
+function printMenu() {
+  console.log('\n================================');
+  console.log('   STUDENT RECORD SYSTEM MENU');
+  console.log('================================');
+  console.log('1. Add student');
+  console.log('2. Display all students');
+  console.log('3. Calculate average score');
+  console.log('4. Quit');
+}
+
+// -----------------------------------------------------------------------------
+// Feature 1: Add a student
+// -----------------------------------------------------------------------------
+/**
+ * Prompts the user for a student's name, ID, and scores, then saves the record.
+ */
+function addStudent() {
+  const name = readlineSync.question('Student name: ').trim();
+  if (name === '') {
+    console.log('Error: Name cannot be empty.');
+    return;
+  }
+
+  const id = readlineSync.questionInt('Student ID: ');
+
+  // Prevent duplicate IDs
+  if (findStudentById(id) !== null) {
+    console.log(`Error: A student with ID ${id} already exists.`);
+    return;
+  }
+
+  const numScores = readlineSync.questionInt('How many scores? ');
+  if (numScores <= 0) {
+    console.log('Error: Number of scores must be a positive integer.');
+    return;
+  }
+
+  const scores = [];
+  for (let i = 1; i <= numScores; i++) {
+    const score = readlineSync.questionFloat(`Enter score ${i}: `);
+    scores.push(score);
+  }
+
+  students.push({ name, id, scores });
+  console.log(`Student "${name}" added successfully.`);
+}
+
+// -----------------------------------------------------------------------------
+// Feature 2: Display all students
+// -----------------------------------------------------------------------------
+/**
+ * Prints a formatted table of all students, their scores, and their averages.
+ */
+function displayAllStudents() {
+  if (students.length === 0) {
+    console.log('No student records found. Add a student first.');
+    return;
+  }
+
+  console.log('\n' + '='.repeat(65));
+  console.log(
+    'Name'.padEnd(20) +
+    'ID'.padEnd(12) +
+    'Scores'.padEnd(25) +
+    'Average'
+  );
+  console.log('='.repeat(65));
+
+  for (let i = 0; i < students.length; i++) {
+    const s = students[i];
+    const scoresStr = s.scores.join(', ');
+    const avg = calculateAverage(s.scores);
+
+    console.log(
+      s.name.padEnd(20) +
+      String(s.id).padEnd(12) +
+      scoresStr.padEnd(25) +
+      avg
+    );
+  }
+
+  console.log('='.repeat(65));
+}
+
+// -----------------------------------------------------------------------------
+// Feature 3: Calculate average score for a specific student
+// -----------------------------------------------------------------------------
+/**
+ * Asks for a student ID and prints that student's average score.
+ */
+function calculateStudentAverage() {
+  const id = readlineSync.questionInt('Enter student ID: ');
+  const student = findStudentById(id);
+
+  if (student === null) {
+    console.log(`Error: No student found with ID ${id}.`);
+    return;
+  }
+
+  const avg = calculateAverage(student.scores);
+  console.log(`${student.name}'s average score: ${avg}`);
+}
+
+// -----------------------------------------------------------------------------
+// MAIN: Keep the menu running until the user quits
+// -----------------------------------------------------------------------------
+function main() {
+  console.log('Welcome to the Student Record Management System!');
+
+  while (true) {
+    printMenu();
+    const choice = readlineSync.questionInt('Enter your choice (1-4): ');
+
+    switch (choice) {
+      case 1:
+        addStudent();
+        break;
+      case 2:
+        displayAllStudents();
+        break;
+      case 3:
+        calculateStudentAverage();
+        break;
+      case 4:
+        console.log('Goodbye!');
+        return;
+      default:
+        console.log('Error: Invalid choice. Please enter a number between 1 and 4.');
+    }
+  }
+}
+
+main();
